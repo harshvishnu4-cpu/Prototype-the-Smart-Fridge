@@ -124,8 +124,11 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const game = $("#game");
-  const hud = $("#hud"), rail = $("#progressRail"), railFill = $("#railFill"), railDots = $("#railDots");
-  const backBtn = $("#backBtn"), replayBtn = $("#replayBtn"), soundBtn = $("#soundBtn"), soundIcon = $("#soundIcon");
+  const hud = $("#hud"), rail = $("#progressRail"), railCount = $("#railCount");
+  const railSegments = $$("#railSegments path");          // document order runs bottom → top
+  const backBtn = $("#backBtn"), replayBtn = $("#replayBtn"), soundBtn = $("#soundBtn");
+  const soundMenu = $("#soundMenu"), muteBtn = $("#muteBtn"), muteText = $("#muteText");
+  const ctaBtn = $("#ctaBtn"), ctaLabel = $("#ctaLabel");
   const hintBtn = $("#hintBtn"), hintBubble = $("#hintBubble"), hintText = $("#hintText");
   const helpOverlay = $("#helpOverlay"), pauseOverlay = $("#pauseOverlay");
   const live = $("#liveRegion"), fxLayer = $("#fxLayer");
@@ -267,7 +270,7 @@
 
     const tl = sceneTl = gsap.timeline();
     if (prev && prev !== next) {
-      const outgoing = $$("[data-anim], .next:not([hidden]), .title-card, .title-steps, .title-floaters", prev);
+      const outgoing = $$("[data-anim], .next:not([hidden]), .title-card, .title-steps", prev);
       tl.to(outgoing, { autoAlpha: 0, y: -26 * direction, duration: 0.26, stagger: 0.03, ease: "power2.in" });
       tl.add(() => {
         prev.classList.remove("active");
@@ -321,22 +324,15 @@
   /* ------------------------------------------------------------------
      HUD, progress rail, timer
      ------------------------------------------------------------------ */
-  function buildRail() {
-    railDots.innerHTML = missionSteps.map(step =>
-      `<li class="rail-dot" data-step="${step}"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg><span class="sr-only"></span></li>`).join("");
-  }
-
+  /* The SKAI rail has one segment per story scene (title counts as step 1). */
+  const RAIL_ON = "#22D3EE", RAIL_OFF = "#ABEEF9";
   function updateRail() {
-    const current = missionSteps.indexOf(state.scene);
-    $$(".rail-dot", railDots).forEach((dot, i) => {
-      const step = missionSteps[i];
-      const done = i < current || isDone(step) || (step === "complete" && current === i);
-      const isCurrent = i === current && step !== "complete";
-      dot.classList.toggle("done", done && !isCurrent);
-      dot.classList.toggle("current", isCurrent);
-      $(".sr-only", dot).textContent = `${stepLabels[step]}${isCurrent ? ", current" : done ? ", complete" : ""}`;
-    });
-    gsap.to(railFill, { scaleY: Math.max(0, current) / (missionSteps.length - 1), duration: 0.7, ease: "power2.out" });
+    const step = Math.max(1, storyOrder.indexOf(state.scene) + 1);
+    railSegments.forEach((seg, i) => seg.setAttribute("fill", i < step ? RAIL_ON : RAIL_OFF));
+    railCount.textContent = `${step}/${storyOrder.length}`;
+    railCount.classList.toggle("long", railCount.textContent.length > 4);
+    rail.setAttribute("aria-valuenow", String(step));
+    rail.setAttribute("aria-valuetext", `${stepLabels[state.scene] || "Start"}, step ${step} of ${storyOrder.length}`);
   }
 
   let hudShown = false;
@@ -348,13 +344,69 @@
     replayBtn.hidden = !(state.scene === "observe" && state.recordingStarted);
     if (inMission && !hudShown) {
       hudShown = true;
-      gsap.from(hud.children, { y: -90, autoAlpha: 0, stagger: 0.05, duration: 0.6, ease: "back.out(1.7)" });
-      gsap.from(rail, { x: 110, autoAlpha: 0, duration: 0.7, ease: "back.out(1.4)" });
+      gsap.from(".skai-top > *", { y: -120, autoAlpha: 0, stagger: 0.05, duration: 0.6, ease: "back.out(1.7)" });
+      gsap.from(".skai-bottom > :not(.skai-cta)", { y: 140, autoAlpha: 0, stagger: 0.04, duration: 0.6, ease: "back.out(1.5)" });
+      gsap.from(rail, { x: 130, autoAlpha: 0, duration: 0.7, ease: "back.out(1.4)" });
     }
-    if (!inMission) hudShown = false;
+    if (!inMission) { hudShown = false; closeSoundMenu(); }
     updateRail();
+    syncCta();
     resetHint();
   }
+
+  /* ------------------------------------------------------------------
+     CTA plate — presents the active scene's visible next action
+     (the scene's own .next buttons stay in the DOM as the source of truth)
+     ------------------------------------------------------------------ */
+  let ctaSource = null, ctaTl = null;
+  const ctaBolts = $$(".skai-screw", ctaBtn), ctaSlots = $$(".skai-slot", ctaBtn);
+  function syncCta() {
+    const scene = state.scene && state.scene !== "title" ? sceneEl() : null;
+    const source = scene ? $$(".next", scene).find(b => !b.hidden) || null : null;
+    const label = source ? source.textContent.replace(/\s+/g, " ").trim() : "";
+    const wasReady = !!ctaSource;
+    ctaSource = source;
+    if (label) {
+      ctaBtn.setAttribute("aria-label", label);
+      if (ctaLabel.textContent !== label) { ctaLabel.textContent = label; fitCtaLabel(); }
+    }
+    if (source && !wasReady) showCta();
+    else if (!source && wasReady) hideCta();
+  }
+
+  /* A CTA plate rises in, then its four bolts spin in clockwise, then the label. */
+  function ctaIntro(button) {
+    const allBolts = $$(".skai-screw", button), slots = $$(".skai-slot", button), label = $(".skai-cta-label", button);
+    const bolts = [2, 3, 1, 0].map(i => allBolts[i]);       // bottom-left, top-left, top-right, bottom-right
+    return gsap.timeline()
+      .set([allBolts, slots, label], { autoAlpha: 0 })
+      .fromTo(button, { autoAlpha: 0, y: 70, scale: 0.55, rotation: -4 },
+        { autoAlpha: 1, y: 0, scale: 1, rotation: 0, duration: 0.55, ease: "back.out(1.9)", transformOrigin: "50% 100%" })
+      .fromTo(bolts, { autoAlpha: 0, scaleX: 0, scaleY: 0, rotation: -300 },
+        { autoAlpha: 1, scaleX: 1, scaleY: -1, rotation: 0, duration: 0.38, stagger: 0.09, ease: "back.out(2.6)" }, 0.32)
+      .to(slots, { autoAlpha: 1, duration: 0.2, stagger: 0.09 }, 0.42)
+      .fromTo(label, { autoAlpha: 0, y: 18 }, { autoAlpha: 1, y: 0, duration: 0.35, ease: "power3.out" }, 0.62);
+  }
+  function showCta() {
+    ctaTl?.kill();
+    ctaTl = ctaIntro(ctaBtn)
+      .add(() => sfx("select"), 0.3)
+      .eventCallback("onComplete", () => ctaSource && gsap.effects.pulse(ctaBtn, { scale: 1.05, repeat: 3 }));
+  }
+  function hideCta() {
+    ctaTl?.kill();
+    ctaTl = gsap.timeline()
+      .to(ctaLabel, { autoAlpha: 0, y: -12, duration: 0.14, ease: "power2.in" })
+      .to([ctaBolts, ctaSlots], { autoAlpha: 0, scaleX: 0, scaleY: 0, duration: 0.16, stagger: 0.03, ease: "power2.in" }, 0.04)
+      .to(ctaBtn, { autoAlpha: 0, y: 50, scale: 0.7, duration: 0.26, ease: "back.in(1.6)", transformOrigin: "50% 100%" }, 0.1);
+  }
+  function fitCtaLabel() {
+    let size = 34;
+    ctaLabel.style.fontSize = `${size}px`;
+    while (size > 20 && ctaLabel.scrollWidth > ctaLabel.clientWidth) ctaLabel.style.fontSize = `${size -= 1}px`;
+  }
+  new MutationObserver(syncCta).observe(game, { subtree: true, attributes: true, attributeFilter: ["hidden"] });
+  ctaBtn.addEventListener("click", () => { if (ctaSource && !ctaSource.hidden) ctaSource.click(); });
 
   setInterval(() => {
     if (!state.scene || state.scene === "title" || state.scene === "complete" || overlayMode() !== "none" || document.hidden) return;
@@ -369,19 +421,20 @@
   function resetHint() {
     hintCall?.kill();
     hideHintIcon();
+    hintBtn.disabled = !hints[state.scene];
     if (!state.scene || state.scene === "title" || state.scene === "complete" || !hints[state.scene]) return;
     hintCall = gsap.delayedCall(12 * GameFX.MOTION, showHintIcon);
   }
   function showHintIcon() {
     if (!hintBubble.hidden) return;
-    hintBtn.hidden = false;
-    gsap.fromTo(hintBtn, { scale: 0, rotation: -120 }, { scale: 1, rotation: 0, duration: 0.6, ease: "back.out(2.4)" });
-    hintBob = gsap.to(hintBtn, { y: -9, duration: 0.7, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.6 });
+    hintBtn.classList.add("ready");
+    gsap.fromTo(hintBtn, { rotation: -16 }, { rotation: 0, duration: 0.6, ease: "elastic.out(1.2, 0.4)" });
+    hintBob = gsap.to(hintBtn, { y: -10, duration: 0.7, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.6 });
   }
   function hideHintIcon() {
     hintBob?.kill(); hintBob = null;
     gsap.set(hintBtn, { clearProps: "transform" });
-    hintBtn.hidden = true;
+    hintBtn.classList.remove("ready");
   }
   function showHintBubble() {
     const text = hints[state.scene];
@@ -1232,22 +1285,15 @@
   /* ------------------------------------------------------------------
      Title and Complete
      ------------------------------------------------------------------ */
-  let titleSplit = null, titleLoops = [];
+  let titleLoops = [];
   function titleEnter() {
     titleLoops.forEach(t => t.kill());
     titleLoops = [];
-    if (!titleSplit) titleSplit = SplitText.create(".title-card h1 span", { type: "chars", charsClass: "char" });
     gsap.timeline({ delay: 0.15 })
       .fromTo(".title-card", { autoAlpha: 0, scale: 0.85, y: 40 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.8, ease: "back.out(1.5)" })
-      .fromTo(titleSplit.chars, { autoAlpha: 0, yPercent: 120, rotation: gsap.utils.wrap([-18, 14]) }, { autoAlpha: 1, yPercent: 0, rotation: 0, stagger: 0.035, duration: 0.7, ease: "back.out(2.2)" }, "-=0.45")
-      .fromTo(".title-sub", { autoAlpha: 0, y: 20 }, { autoAlpha: 1, y: 0 }, "-=0.35")
-      .fromTo("#startBtn", { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 1, scale: 1, ease: "back.out(2.4)" }, "-=0.25")
+      .add(ctaIntro($("#startBtn")), "-=0.25")
       .fromTo(".title-steps", { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0 }, "-=0.3")
       .fromTo(".title-steps li", { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 1, scale: 1, stagger: 0.1, ease: "back.out(2.4)" }, "<");
-    $$(".floater").forEach((floater, i) => {
-      gsap.fromTo(floater, { autoAlpha: 0, scale: 0.3, rotation: gsap.utils.random(-30, 30) }, { autoAlpha: 1, scale: 1, rotation: gsap.utils.random(-12, 12), duration: 0.8, delay: 0.5 + i * 0.12, ease: "back.out(2)" });
-      if (!GameFX.reduced) titleLoops.push(gsap.to(floater, { y: "+=22", rotation: "+=8", duration: gsap.utils.random(2.2, 3.4), yoyo: true, repeat: -1, ease: "sine.inOut", delay: 1.3 + i * 0.2 }));
-    });
     if (!GameFX.reduced) titleLoops.push(gsap.to("#startBtn", { scale: 1.04, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut", delay: 2.4 }));
   }
   function titleLeave() { titleLoops.forEach(t => t.kill()); titleLoops = []; }
@@ -1318,23 +1364,66 @@
   $("#startBtn").addEventListener("click", () => { GameSound.unlock(); go("NEXT"); });
   $$("[data-next]").forEach(button => button.addEventListener("click", () => go("NEXT")));
   backBtn.addEventListener("click", () => { sfx("tap"); go("BACK"); });
-  $("#markBtn").addEventListener("click", () => { sfx("tap"); actor.send({ type: "PAUSE" }); });
-  $("#helpBtn").addEventListener("click", () => { sfx("tap"); actor.send({ type: "HELP" }); });
+  $("#helpBtn").addEventListener("click", () => { sfx("tap"); closeSoundMenu(); actor.send({ type: "HELP" }); });
   $("#helpClose").addEventListener("click", () => { sfx("tap"); actor.send({ type: "CLOSE" }); });
   $("#resumeBtn").addEventListener("click", () => { sfx("tap"); actor.send({ type: "RESUME" }); });
+  $("#pauseClose").addEventListener("click", () => { sfx("tap"); actor.send({ type: "RESUME" }); });
   [helpOverlay, pauseOverlay].forEach(layer => layer.addEventListener("click", event => {
-    if (event.target === layer) actor.send({ type: layer === helpOverlay ? "CLOSE" : "RESUME" });
+    if (event.target === layer || event.target === layer.firstElementChild) actor.send({ type: layer === helpOverlay ? "CLOSE" : "RESUME" });
   }));
   hintBtn.addEventListener("click", showHintBubble);
 
+  /* Sound hex opens the menu: Replay Narration / Mute All Sounds. */
+  function openSoundMenu() {
+    soundMenu.hidden = false;
+    soundBtn.setAttribute("aria-expanded", "true");
+    $("#narrationBtn").focus({ preventScroll: true });
+  }
+  function closeSoundMenu({ refocus = false } = {}) {
+    if (soundMenu.hidden) return;
+    soundMenu.hidden = true;
+    soundBtn.setAttribute("aria-expanded", "false");
+    if (refocus) soundBtn.focus({ preventScroll: true });
+  }
   soundBtn.addEventListener("click", () => {
     GameSound.unlock();
-    state.sound = !state.sound;
-    GameSound.setEnabled(state.sound);
-    soundIcon.setAttribute("href", state.sound ? "#i-sound" : "#i-mute");
-    soundBtn.setAttribute("aria-pressed", String(state.sound));
-    soundBtn.setAttribute("aria-label", state.sound ? "Sound on" : "Sound off");
+    if (soundMenu.hidden) { sfx("tap"); openSoundMenu(); } else closeSoundMenu();
+  });
+  document.addEventListener("pointerdown", event => {
+    if (!soundMenu.hidden && !event.target.closest("#soundMenu, #soundBtn")) closeSoundMenu();
+  });
+
+  /* Narration reads the active step's heading and prompt aloud. */
+  function narrate() {
+    const synth = window.speechSynthesis;
+    if (!synth || !state.sound) return;
+    const scene = sceneEl();
+    const heading = $("h2", scene);
+    const prompt = heading && heading.parentElement.querySelector("h2 ~ p");
+    const text = [heading, prompt].filter(Boolean).map(el => el.textContent.replace(/\s+/g, " ").trim()).join(" ");
+    if (!text) return;
+    synth.cancel();
+    const line = new SpeechSynthesisUtterance(text);
+    line.lang = document.documentElement.lang || "en-IN";
+    line.rate = 0.95;
+    synth.speak(line);
+  }
+  $("#narrationBtn").addEventListener("click", () => { closeSoundMenu({ refocus: true }); narrate(); });
+
+  function setSound(on) {
+    state.sound = on;
+    GameSound.setEnabled(on);
+    if (!on) window.speechSynthesis?.cancel();
+    soundBtn.classList.toggle("is-muted", !on);
+    soundBtn.setAttribute("aria-label", on ? "Sound options" : "Sound options, muted");
+    muteBtn.setAttribute("aria-checked", String(!on));
+    muteText.innerHTML = on ? "Mute All<br>Sounds" : "Unmute<br>Sounds";
+  }
+  muteBtn.addEventListener("click", () => {
+    GameSound.unlock();
+    setSound(!state.sound);
     if (state.sound) sfx("tap");
+    closeSoundMenu({ refocus: true });
   });
 
   document.addEventListener("pointerdown", () => GameSound.unlock());
@@ -1344,6 +1433,7 @@
     onInteraction(event);
     if (event.key === "Escape") {
       event.preventDefault();
+      if (!soundMenu.hidden) { closeSoundMenu({ refocus: true }); return; }
       if (state.scene !== "title") actor.send({ type: "PAUSE" });
       return;
     }
@@ -1385,7 +1475,6 @@
     preload();
     fitGame();
     window.addEventListener("resize", fitGame);
-    buildRail();
     buildClues();
     buildHouseholds();
     prepareFixLab();

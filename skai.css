@@ -1,0 +1,230 @@
+/* ==========================================================================
+   SKAI frame — Figma "SKAI-final" (Main, Info screen, Panal, Cars, Sound buttons)
+   HUD pieces are laid out in Figma's 1959 × 1102 frame units inside .skai-stage,
+   which scales them onto the 1600 × 900 plane (1600 / 1959).
+   ========================================================================== */
+
+@font-face { font-family: "Chakra Petch"; font-style: normal; font-weight: 500; font-display: swap; src: url("assets/fonts/chakra-petch-500.woff2") format("woff2"); }
+@font-face { font-family: "Chakra Petch"; font-style: normal; font-weight: 600; font-display: swap; src: url("assets/fonts/chakra-petch-600.woff2") format("woff2"); }
+@font-face { font-family: "Chakra Petch"; font-style: normal; font-weight: 700; font-display: swap; src: url("assets/fonts/chakra-petch-700.woff2") format("woff2"); }
+
+:root {
+  --skai-k: .816743;          /* 1600 / 1959 */
+  --skai-purple: #5b2e85;
+  --skai-purple-deep: #4a2470;
+  --skai-cyan: #22d3ee;
+  --skai-cyan-soft: #abeef9;
+  --skai-orange: #fdae35;
+  --skai-font: "Chakra Petch", "Trebuchet MS", system-ui, sans-serif;
+}
+
+body { font-family: var(--skai-font); }
+
+.skai-stage { position: absolute; left: 0; top: 0; width: 1959px; height: 1102px; transform: scale(var(--skai-k)); transform-origin: 0 0; pointer-events: none; }
+.skai-stage img { position: absolute; display: block; max-width: none; pointer-events: none; }
+.skai-stage button { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
+.skai-stage :focus-visible { outline: 6px solid var(--focus); outline-offset: 4px; border-radius: 16px; }
+.flip-x { transform: scaleX(-1); }
+.flip-y { transform: scaleY(-1); }
+
+/* ---------- HUD layers ---------- */
+.skai-hud { position: absolute; inset: 0; z-index: 40; pointer-events: none; }
+.skai-top, .skai-bottom, .skai-brand { position: absolute; inset: 0; margin: 0; pointer-events: none; }
+
+/* Top left: quit plate + SKAI Space logo */
+.skai-back-plate { left: -4px; top: -4px; width: 277px; height: 131px; transition: filter .2s; }
+.skai-logo-mark { left: 157.9px; top: 28px; width: 56.5422px; height: 14.7787px; }
+.skai-logo-word { left: 218.2px; top: 35.7px; width: 29.7134px; height: 8.96675px; }
+.skai-back { left: -4px; top: -4px; width: 162px; height: 127px; border-radius: 0 0 24px 0; }
+.skai-brand:has(.skai-back:not(:disabled):hover) .skai-back-plate { filter: brightness(1.06); }
+.skai-back:disabled { cursor: default; }
+
+/* Top right: line, sound + info hexes, timer */
+.skai-top-line { left: 1491.1px; top: -12px; width: 522.901px; height: 73px; }
+.skai-hex { width: 89.1631px; height: 82.5091px; transition: translate .15s; }
+.skai-hex:hover { translate: 0 -3px; }
+.skai-hex:active { translate: 0 2px; }
+.skai-sound { left: 1571.9px; top: 16px; }
+.skai-hex-plate { left: 0; top: 0; width: 89.1631px; height: 82.5091px; }
+.skai-sound-icon { left: 26.05px; top: 24px; width: 37.8959px; height: 33px; }
+.skai-sound.is-muted .skai-sound-icon { opacity: .45; }
+.skai-sound.is-muted::after { content: ""; position: absolute; left: 22px; top: 40px; width: 46px; height: 5px; border-radius: 3px; background: #fff; transform: rotate(-38deg); }
+.skai-info { left: 1655.9px; top: 16px; }
+.skai-info-plate { left: 8.91px; top: 9.24px; width: 71.3417px; height: 64.025px; transform: rotate(16.63deg); }
+.skai-info-i { position: absolute; left: 38.66px; top: 45.44px; transform: translateY(-50%); color: #fff; font: 700 41.808px/normal var(--skai-font); }
+.skai-timer { position: absolute; left: 1749.47px; top: 18px; width: 188.974px; height: 77.7637px; }
+.skai-timer img { left: 0; top: 0; width: 188.974px; height: 77.7637px; }
+.skai-timer span { position: absolute; inset: 0 5px 0 0; display: grid; place-items: center; color: #fff; font: 700 34.425px/normal var(--skai-font); font-variant-numeric: tabular-nums; }
+
+/* Sound dropdown (Figma "Sound buttons", open state) */
+.skai-sound-menu { position: absolute; left: 1514px; top: 99px; width: 221.108px; height: 211px; pointer-events: auto; transform-origin: 50% 0; animation: skaiMenuIn .18s ease-out; }
+.skai-sound-menu-plate { left: 0; top: 0; width: 221.108px; height: 211px; }
+.skai-menu-item { left: 12px; width: 197px; border-radius: 14px; color: #fff; text-align: left; transition: background-color .15s; }
+.skai-menu-item:hover { background: rgba(255, 255, 255, .1); }
+.skai-menu-item span { position: absolute; left: 87.81px; transform: translateY(-50%); font: 700 22.502px/normal var(--skai-font); white-space: nowrap; }
+.skai-menu-replay { top: 20px; height: 80px; }
+.skai-menu-replay span { top: 39.32px; }
+.skai-icon-replay { left: 16.9px; top: 15.3px; width: 49.1505px; height: 49.1503px; }
+.skai-menu-mute { top: 108px; height: 84px; }
+.skai-menu-mute span { top: 41.03px; }
+.skai-icon-mute-ring { left: 16.9px; top: 17px; width: 49.1502px; height: 49.1503px; }
+.skai-icon-mute-speaker { left: 28.9px; top: 31.6px; width: 29.0493px; height: 19.8353px; }
+@keyframes skaiMenuIn { from { opacity: 0; transform: translateY(-10px) scale(.96); } }
+
+/* Right: progress rail */
+.skai-rail { position: absolute; left: 1869px; top: 226px; width: 90px; height: 640px; pointer-events: none; }
+.skai-rail-art { position: absolute; left: 0; top: 0; width: 90px; height: 640px; overflow: visible; }
+.skai-rail-art #railSegments path { transition: fill .45s ease; }
+.skai-volt { width: 12px; height: 12px; }
+.skai-volt.v1 { left: 75px; top: 579px; }
+.skai-volt.v2 { left: 24px; top: 614px; }
+.skai-volt.v3 { left: 4px; top: 7px; }
+.skai-volt.v4 { left: 75px; top: 23px; }
+.skai-rail-count { position: absolute; left: 10px; top: 44px; color: var(--skai-cyan); font: 700 35px/normal var(--skai-font); white-space: nowrap; }
+
+/* Bottom: frame lines, CTA plate, hint */
+.skai-line-left { left: 0; top: 935.5px; width: 813px; height: 30px; }
+.skai-line-slash { top: 943px; width: 44px; height: 23.5px; transform: scaleY(-1); }
+.skai-line-slash.s1 { left: 308px; }
+.skai-line-slash.s2 { left: 334px; }
+.skai-line-right { left: 1167.56px; top: 992.5px; width: 796px; height: 30px; }
+.skai-line-bar { left: 1523.56px; top: 992px; width: 489px; height: 22.5px; transform: scaleY(-1); }
+
+.skai-cta { width: 480.5px; height: 122px; color: #fff; transition: translate .15s, filter .25s; }
+.skai-bottom .skai-cta { left: 738px; top: 916px; visibility: hidden; opacity: 0; }   /* shown by script.js only when the step needs it */
+.skai-cta-plate { left: 1.01px; top: -6.21px; width: 475.725px; height: 135.125px; }
+.skai-screw { width: 14.7701px; height: 15.987px; transform: scaleY(-1); }
+.skai-screw.sa1 { left: 442px; top: 94px; }
+.skai-screw.sa2 { left: 411px; top: 31px; }
+.skai-screw.sb { left: 20px; top: 95px; }
+.skai-screw.sc { left: 54px; top: 12px; }
+.skai-slot { position: absolute; width: 1px; height: 9px; background: #3c3b3b; }
+.skai-slot.sl1 { left: 449px; top: 98px; }
+.skai-slot.sl2 { left: 418px; top: 34px; }
+.skai-slot.sl3 { left: 27px; top: 98px; }
+.skai-slot.sl4 { left: 61px; top: 15px; }
+.skai-cta-label { position: absolute; left: 34px; top: 49.5px; width: 388px; text-align: center; font: 700 34px/44px var(--skai-font); text-transform: uppercase; white-space: nowrap; }
+.skai-cta:hover { translate: 0 -4px; filter: brightness(1.08); }
+.skai-cta:active { translate: 0 3px; }
+
+.skai-hint { left: 47.56px; top: 963px; width: 116px; height: 99px; border-radius: 50%; transition: translate .15s, filter .2s; }
+.skai-hint-badge { left: 0; top: 0; width: 116px; height: 99px; }
+.skai-hint-rays { left: 30.61px; top: 14.6px; width: 68.1962px; height: 55.7132px; }
+.skai-hint-bulb { left: 46.19px; top: 30.3px; width: 35.3762px; height: 52.0252px; }
+.skai-hint:disabled { cursor: default; filter: saturate(.3) opacity(.7); }
+.skai-hint.ready { filter: drop-shadow(0 0 14px rgba(255, 221, 51, .95)); }
+.skai-hint:not(:disabled):hover { translate: 0 -3px; }
+
+/* Hint bubble sits beside the bulb, on the plane */
+.hint-bubble { left: 142px; bottom: 34px; max-width: 520px; border-radius: 22px 22px 22px 6px; background: var(--skai-purple); border: 3px solid #fff; font-weight: 600; }
+
+/* ---------- Info screen (help) + pause: purple card with cyan close tab ---------- */
+.overlay.skai-overlay { display: block; place-items: initial; background: rgba(6, 6, 6, .44); backdrop-filter: none; }
+.skai-overlay .skai-stage { pointer-events: auto; }
+.skai-card { position: absolute; left: 226px; top: 139px; width: 1440.36px; height: 861px; animation: cardIn .3s cubic-bezier(.3, 1.4, .5, 1); }
+.skai-card-plate { left: 289.68px; top: -289.68px; width: 861px; height: 1440.36px; transform: rotate(90deg); }
+.skai-card-body { position: absolute; left: 170px; top: 150px; right: 170px; bottom: 90px; color: #fff; }
+.skai-card-body h2 { margin: 0 0 18px; font: 700 64px/1.1 var(--skai-font); color: #fff; letter-spacing: .5px; }
+.skai-card-body p { margin: 0 0 18px; font-size: 32px; font-weight: 500; line-height: 1.4; }
+.skai-card-body ul { margin: 0; padding-left: 34px; }
+.skai-card-body li { font-size: 30px; font-weight: 500; line-height: 1.45; }
+.skai-card-body li + li { margin-top: 14px; }
+.skai-card-body kbd { color: var(--skai-purple); border-color: #fff; background: #fff; font-family: var(--skai-font); font-weight: 700; }
+.skai-card-body .ic.inline { color: #ffd53f; }
+.skai-card-body.pause-body { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.pause-body h2 { font-size: 80px; }
+.pause-body p { margin-bottom: 64px; font-size: 38px; }
+.pause-body .skai-cta { position: relative; flex: 0 0 auto; }
+
+/* Title (thumbnail) screen: the SKAI CTA plate, centred in the title card.
+   The button takes the plate's size on the plane; the art inside is drawn in frame units and scaled. */
+.title-cta { position: relative; display: block; width: calc(480.5px * var(--skai-k)); height: calc(122px * var(--skai-k)); margin: 0 auto; padding: 0; border: 0; background: none; cursor: pointer; }
+.skai-cta-art { position: absolute; left: 0; top: 0; transform: scale(var(--skai-k)); transform-origin: 0 0; }
+.skai-cta-art img { position: absolute; display: block; max-width: none; pointer-events: none; }
+.title-cta:focus-visible { border-radius: 20px; }
+.skai-cta-art .skai-cta-label { left: 46px; }   /* label centred on the plate (Figma sits it 12 px left) */
+.skai-close { left: 1551px; top: 102px; width: 183px; height: 141px; transition: translate .15s; }
+.skai-close img { left: 0; top: 0; width: 183px; height: 141px; }
+.skai-close:hover { translate: 0 -3px; }
+
+/* ---------- Footage replay (moved from the old HUD into the player bar) ---------- */
+.replay-btn { height: 44px; display: inline-flex; align-items: center; gap: 8px; padding: 0 16px 0 12px; border: 0; border-radius: 14px; background: var(--skai-cyan); color: #fff; font: 700 17px/1 var(--skai-font); cursor: pointer; box-shadow: 0 4px 0 #129bb0; transition: translate .15s; }
+.replay-btn .ic { font-size: 22px; stroke-width: 2.8; }
+.replay-btn:hover { translate: 0 -2px; }
+.replay-btn:active { translate: 0 3px; box-shadow: 0 1px 0 #129bb0; }
+
+/* ==========================================================================
+   Content panels — Figma "Panal" (wide panel) and "Cars" (three cards):
+   purple #5b2e85, 29.6 px corners, 5.2 px orange top edge (frame units → plane).
+   ========================================================================== */
+.scene { padding: 112px 128px 160px 560px; }
+.scene .next { display: none !important; }   /* the HUD's CTA plate presents the step's next action */
+
+.panel,
+.number-card,
+.choice,
+.gc-face,
+.impact figure {
+  background: var(--skai-purple);
+  border: 0;
+  border-radius: 24.2px;
+  box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 14px 34px rgba(24, 10, 52, .32);
+  color: #fff;
+}
+.bubble::before { display: none; }
+.tag { background: var(--skai-cyan); color: #fff; font-weight: 700; letter-spacing: 1.6px; border-radius: 8px; }
+h2 { color: #fff; font-weight: 700; letter-spacing: 0; }
+.bubble p, .transfer-panel > p, .observe-side > p { color: rgba(255, 255, 255, .86); font-weight: 500; }
+
+/* Light chips that sit on the purple keep the original ink text */
+.caption, .result-card, .fix-node, .hh-card, .clue, .cam-result, .facts li, .choice-summary, .feedback, .day-chip, .scrub-day { color: var(--ink); }
+
+/* Secondary text that now sits directly on purple */
+.legend li, .dial-label, .dial-stops span, .hh-title, .complete-sub, .learned small, .balance-caption { color: rgba(255, 255, 255, .84); font-weight: 600; }
+.calibrate-board .wk-days span { color: rgba(255, 255, 255, .78); }
+.hh-title b, .balance-caption b { color: var(--skai-cyan); }
+.learned li { border-bottom-color: rgba(255, 255, 255, .16); }
+.complete-card h2 { color: #fff; }
+
+/* Goal cards + balance strip */
+.gc-front { border: 0; }
+.gc-back { border: 0; }
+.gc-back b { color: #fff; }
+.gc-back small { color: rgba(255, 255, 255, .84); font-weight: 600; }
+.goal-card[data-goal="ready"] .gc-back { box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 0 0 5px var(--green), 0 14px 34px rgba(24, 10, 52, .32); }
+.goal-card[data-goal="waste"] .gc-back { box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 0 0 5px var(--orange), 0 14px 34px rgba(24, 10, 52, .32); }
+.balance-wrap { background: var(--skai-purple); border-radius: 24.2px; box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 14px 34px rgba(24, 10, 52, .32); }
+
+/* Number cards (predict) */
+.number-card > b { color: #fff; }
+.number-card > small { color: rgba(255, 255, 255, .84); font-weight: 600; }
+.number-card:hover { box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 0 0 5px var(--skai-cyan), 0 14px 34px rgba(24, 10, 52, .32); }
+.number-card.selected { background: #6b3a9a; box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 0 0 6px var(--skai-cyan), 0 14px 34px rgba(24, 10, 52, .32); }
+.nc-lock { background: var(--skai-cyan); }
+
+/* Answer cards (investigate / repair / explain / transfer) */
+.choice:hover { box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 0 0 5px var(--skai-cyan), 0 14px 34px rgba(24, 10, 52, .32); }
+.choice.correct { background: var(--skai-purple); box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 0 0 5px var(--green), 0 14px 34px rgba(24, 10, 52, .32); }
+.choice.wrong { background: var(--skai-purple-deep); box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 0 0 5px var(--danger), 0 14px 34px rgba(24, 10, 52, .32); }
+.choice-text small { color: rgba(255, 255, 255, .8); font-weight: 600; }
+.choices.solved .choice:hover { box-shadow: inset 0 4.21px 0 var(--skai-orange), 0 0 0 5px var(--green), 0 14px 34px rgba(24, 10, 52, .32); }
+
+/* Transfer outcome photos */
+.impact .good figcaption { color: #8be37a; }
+.impact .bad figcaption { color: #ffaaa4; }
+
+/* Calibrate prediction chip */
+.pred-chip { background: rgba(255, 255, 255, .16); color: #fff; }
+
+/* Fit the steps between the top frame and the bottom CTA plate */
+.scene { padding-top: 100px; }
+.bubble { margin-bottom: 16px; }
+.calibrate-board { padding: 18px 26px 16px; gap: 12px 28px; }
+.cal-controls { gap: 12px; }
+.households { margin-top: 10px; padding: 12px 20px 14px; }
+.hh-card { padding: 8px 14px 10px; }
+.hh-verdict { margin-top: 4px; }
+.complete-card { top: 96px; padding-bottom: 26px; }
+
+/* Rail counter shrinks to fit "10/10" */
+.skai-rail-count.long { left: 8px; top: 48px; font-size: 28px; letter-spacing: -.5px; }
