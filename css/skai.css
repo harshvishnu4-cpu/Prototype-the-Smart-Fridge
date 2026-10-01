@@ -2,11 +2,9 @@
    SKAI frame — Figma "SKAI-final" (Main, Info screen, Panal, Cars, Sound buttons)
    HUD pieces are laid out in Figma's 1959 × 1102 frame units inside .skai-stage,
    which scales them onto the 1600 × 900 plane (1600 / 1959).
+   The Chakra Petch faces (assets/fonts, weights 500/600/700) are registered by js/preload.js.
    ========================================================================== */
 
-@font-face { font-family: "Chakra Petch"; font-style: normal; font-weight: 500; font-display: swap; src: url("assets/fonts/chakra-petch-500.woff2") format("woff2"); }
-@font-face { font-family: "Chakra Petch"; font-style: normal; font-weight: 600; font-display: swap; src: url("assets/fonts/chakra-petch-600.woff2") format("woff2"); }
-@font-face { font-family: "Chakra Petch"; font-style: normal; font-weight: 700; font-display: swap; src: url("assets/fonts/chakra-petch-700.woff2") format("woff2"); }
 
 :root {
   --skai-k: .816743;          /* 1600 / 1959 */
@@ -227,3 +225,20 @@ h2 { color: #fff; font-weight: 700; letter-spacing: 0; }
 
 /* Rail counter shrinks to fit "10/10" */
 .skai-rail-count.long { left: 8px; top: 48px; font-size: 28px; letter-spacing: -.5px; }
+
+/* Title loading bar: same footprint as the Start plate it gives way to */
+.title-loader { width: calc(480.5px * var(--skai-k)); height: calc(122px * var(--skai-k)); margin: 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.title-loader-text { color: #fff; font: 700 22px/1 var(--skai-font); letter-spacing: 2px; text-transform: uppercase; text-shadow: 0 2px 0 var(--skai-purple-deep), 0 0 12px rgba(42, 12, 84, .6); }
+.title-loader-text b { display: inline-block; min-width: 3.2em; text-align: left; color: var(--skai-cyan); font-variant-numeric: tabular-nums; }
+.title-loader-track { position: relative; display: block; width: 100%; height: 30px; overflow: hidden; border: 3px solid #fff; border-radius: 15px; background: var(--skai-purple); box-shadow: inset 0 3px 0 var(--skai-orange), 0 10px 24px rgba(24, 10, 52, .4); }
+.title-loader-fill { position: absolute; inset: 0; transform: scaleX(0); transform-origin: 0 50%; transition: transform .2s linear;
+  background: repeating-linear-gradient(-55deg, var(--skai-cyan) 0 14px, var(--skai-cyan-soft) 14px 22px); background-size: 200% 100%; animation: loaderStripes 1.1s linear infinite; }
+@keyframes loaderStripes { to { background-position: -48px 0; } }
+
+/* Goal cards flip in 3D: images with filters on a face get their own compositing layer and can ignore
+   the face's backface-visibility, so they are hidden outright whenever their face is turned away
+   (delayed to the flip's midpoint). */
+.gc-face > *, .gc-back img { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.goal-card .gc-back > * { visibility: hidden; transition: visibility 0s .18s; }
+.goal-card.revealed .gc-back > * { visibility: visible; }
+.goal-card.revealed .gc-front > * { visibility: hidden; transition: visibility 0s .18s; }

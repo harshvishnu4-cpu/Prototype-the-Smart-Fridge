@@ -1,7 +1,7 @@
 /*
  * Milk mission — main game script.
  *
- * Libraries (all stored in /vendor, no network needed):
+ * Libraries (all stored in js/vendor, no network needed):
  *   GSAP + plugins  animation (scene transitions, recording, Flip layouts, Draggable dials,
  *                   MotionPath flights, DrawSVG strokes, SplitText headings, Physics2D bursts)
  *   XState          mission flow state machine (scene order, completion guards, pause layer)
@@ -14,7 +14,7 @@
 (() => {
   "use strict";
 
-  const { gsap, Flip, Draggable, SplitText, XState, FridgeSim, GameSound, GameVoice, GameFX } = window;
+  const { gsap, Flip, Draggable, SplitText, XState, FridgeSim, GameSound, GameVoice, GameFX, GameAssets } = window;
 
   /* ------------------------------------------------------------------
      Mission definition
@@ -28,8 +28,7 @@
   const correctAnswers = { cause: "papa", fix: "recheck", scale: "many", transfer: "recheck" };
 
   const ART = {
-    carton: "assets/storyboard/props/milk-carton.webp",
-    spoiled: "assets/storyboard/props/spoiled-milk.webp"
+    carton: "assets/storyboard/props/milk-carton.webp"
   };
   const ENV = {
     closed: "assets/storyboard/environments/kitchen-closed-fridge.webp",
@@ -240,11 +239,11 @@
     const incoming = bgLayers[1 - frontLayer], outgoing = bgLayers[frontLayer];
     frontLayer = 1 - frontLayer;
     tl.add(() => {
-      incoming.style.backgroundImage = `url("${ENV[env]}")`;
-      gsap.set(incoming, { zIndex: 2 }); gsap.set(outgoing, { zIndex: 1 });
+      GameAssets.setBackground(incoming, ENV[env]);
+      gsap.set(incoming, { zIndex: 2, willChange: "opacity, transform" }); gsap.set(outgoing, { zIndex: 1 });
     }, 0);
     tl.fromTo(incoming, { autoAlpha: 0, scale: 1.06 }, { autoAlpha: 1, scale: 1, duration: 0.9, ease: "power2.out", immediateRender: false }, 0.02);
-    tl.set(outgoing, { autoAlpha: 0 }, 0.95);
+    tl.set(outgoing, { autoAlpha: 0, willChange: "auto" }, 0.95);   // hidden layer releases its GPU texture
   }
 
   function changePose(tl, pose) {
@@ -253,7 +252,7 @@
     poseCurrent = pose;
     if (had) tl.to(hero, { autoAlpha: 0, y: 40, duration: 0.22, ease: "power2.in" }, 0);
     if (pose) {
-      tl.add(() => { meera.src = POSE[pose]; }, had ? 0.23 : 0);
+      tl.add(() => { meera.src = GameAssets.url(POSE[pose]); }, had ? 0.23 : 0);
       tl.fromTo(hero, { autoAlpha: 0, y: 50 }, { autoAlpha: 1, y: 0, duration: 0.55, ease: "back.out(1.5)", immediateRender: false }, had ? 0.26 : 0.05);
     }
   }
@@ -506,7 +505,7 @@
         <div class="wk-line fresh"><span>Fresh limit · ${FRESH}</span></div>
         <div class="wk-line order"><span>Order at <b class="wk-t">2</b></span></div>
         ${days.map(() => `<div class="wk-stack">${Array.from({ length: 6 }, (_, j) =>
-          `<img class="wk-carton" src="${ART.carton}" alt="" style="bottom:calc(var(--unit) * ${j})">`).join("")}<span class="wk-empty">✕</span></div>`).join("")}
+          `<img class="wk-carton" src="${GameAssets.url(ART.carton)}" alt="" style="bottom:calc(var(--unit) * ${j})">`).join("")}<span class="wk-empty">✕</span></div>`).join("")}
       </div>
       <div class="wk-flags">${days.map(() =>
         `<div class="wk-flag"><span class="f-order"><svg class="ic"><use href="#i-ticket"/></svg></span><span class="f-truck"><svg class="ic"><use href="#i-truck"/></svg>+${PACK}</span></div>`).join("")}</div>
@@ -684,7 +683,7 @@
   function buildRecordingDom() {
     dayChips.innerHTML = recorded.days.map(d => `<li class="day-chip" data-state="todo"><span>${d.day}</span><b>${d.morning}</b></li>`).join("");
     slotsEl.innerHTML = CAM.slotLeft.map((x, i) =>
-      `<img class="slot${i >= FRESH ? " extra" : ""}" src="${ART.carton}" alt="" style="left:${x}px;top:${CAM.slotTop}px">`).join("");
+      `<img class="slot${i >= FRESH ? " extra" : ""}" src="${GameAssets.url(ART.carton)}" alt="" style="left:${x}px;top:${CAM.slotTop}px">`).join("");
     gsap.set([orderTicket, camPapa, deliveryEl, floatEl, camAlert, camResult, scanBeam], { autoAlpha: 0, x: 0, y: 0 });
     gsap.set(zoneExtra, { attr: { "data-alert": "off" } });
     captionEl.textContent = INTRO_CAPTION;
@@ -1297,11 +1296,32 @@
   function titleEnter() {
     titleLoops.forEach(t => t.kill());
     titleLoops = [];
+    startRevealed = false;
+    if (!GameAssets.isReady()) return;              // the loading bar is already on screen; it reveals Start itself
     gsap.timeline({ delay: 0.15 })
       .fromTo(".title-card", { autoAlpha: 0, scale: 0.85, y: 40 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.8, ease: "back.out(1.5)" })
-      .add(ctaIntro($("#startBtn")), "-=0.25");
-    if (!GameFX.reduced) titleLoops.push(gsap.to("#startBtn", { scale: 1.04, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut", delay: 2.4 }));
+      .add(revealStart, "-=0.25");
   }
+
+  /* ------------------------------------------------------------------
+     Title loading bar — the Start plate appears only once every asset is fetched
+     ------------------------------------------------------------------ */
+  const startBtn = $("#startBtn"), titleLoader = $("#titleLoader");
+  let startRevealed = false;
+  function revealStart() {
+    if (startRevealed || state.scene !== "title") return;
+    startRevealed = true;
+    gsap.killTweensOf(titleLoader);
+    titleLoader.hidden = true;
+    startBtn.hidden = false;
+    ctaIntro(startBtn);
+    if (!GameFX.reduced) titleLoops.push(gsap.to(startBtn, { scale: 1.04, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut", delay: 1.2 }));
+  }
+  GameAssets.onProgress(() => {                 // the bar itself is painted by js/preload.js
+    if (GameAssets.isReady() && !startRevealed && state.scene === "title") {
+      gsap.to(titleLoader, { autoAlpha: 0, y: -10, duration: 0.25, delay: 0.25, onComplete: revealStart });
+    }
+  });
   function titleLeave() { titleLoops.forEach(t => t.kill()); titleLoops = []; }
 
   function celebrate(big = false) {
@@ -1367,7 +1387,10 @@
   /* ------------------------------------------------------------------
      Input
      ------------------------------------------------------------------ */
-  $("#startBtn").addEventListener("click", () => { GameSound.unlock(); GameVoice.unlock(); go("NEXT"); });
+  startBtn.addEventListener("click", () => {
+    if (!GameAssets.isReady()) return;           // keyboard / programmatic starts wait for the preloader too
+    GameSound.unlock(); GameVoice.unlock(); go("NEXT");
+  });
   $$("[data-next]").forEach(button => button.addEventListener("click", () => go("NEXT")));
   backBtn.addEventListener("click", () => { sfx("tap"); go("BACK"); });
   $("#helpBtn").addEventListener("click", () => { sfx("tap"); closeSoundMenu(); actor.send({ type: "HELP" }); });
@@ -1458,16 +1481,7 @@
   /* ------------------------------------------------------------------
      Boot
      ------------------------------------------------------------------ */
-  function preload() {
-    const sources = [...Object.values(ENV), ...Object.values(POSE), ...Object.values(ART),
-      "assets/storyboard/characters/papa-with-milk.webp", "assets/storyboard/characters/sibling-with-milk.webp",
-      "assets/storyboard/props/mission-medal.webp", "assets/storyboard/outcomes/cupboard-balanced.webp",
-      "assets/storyboard/outcomes/cupboard-overstock.webp"];
-    sources.forEach(src => { const img = new Image(); img.src = src; });
-  }
-
   function boot() {
-    preload();
     fitGame();
     window.addEventListener("resize", fitGame);
     buildClues();
