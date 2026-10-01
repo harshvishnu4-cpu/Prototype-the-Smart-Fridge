@@ -25,7 +25,6 @@ body { font-family: var(--skai-font); }
 .skai-stage button { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; pointer-events: auto; }
 .skai-stage :focus-visible { outline: 6px solid var(--focus); outline-offset: 4px; border-radius: 16px; }
 .flip-x { transform: scaleX(-1); }
-.flip-y { transform: scaleY(-1); }
 
 /* ---------- HUD layers ---------- */
 .skai-hud { position: absolute; inset: 0; z-index: 40; pointer-events: none; }

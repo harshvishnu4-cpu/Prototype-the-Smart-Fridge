@@ -6,6 +6,7 @@
  *                   MotionPath flights, DrawSVG strokes, SplitText headings, Physics2D bursts)
  *   XState          mission flow state machine (scene order, completion guards, pause layer)
  *   Tone.js         synthesised interface sounds (js/sound.js)
+ *   GameVoice       Meera's recorded voice-over, assets/audio/vo (js/voice.js)
  *   canvas-confetti the finale celebration
  * Game logic:
  *   FridgeSim       every stock number the learner sees (js/simulation.js)
@@ -13,7 +14,7 @@
 (() => {
   "use strict";
 
-  const { gsap, Flip, Draggable, SplitText, XState, FridgeSim, GameSound, GameFX } = window;
+  const { gsap, Flip, Draggable, SplitText, XState, FridgeSim, GameSound, GameVoice, GameFX } = window;
 
   /* ------------------------------------------------------------------
      Mission definition
@@ -264,13 +265,14 @@
     if (sceneTl) sceneTl.progress(1).kill();
     if (prevName) sceneHandlers[prevName]?.leave?.();
     hideHint();
+    GameVoice.stop();
 
     state.scene = name;
     game.dataset.currentScene = name;
 
     const tl = sceneTl = gsap.timeline();
     if (prev && prev !== next) {
-      const outgoing = $$("[data-anim], .next:not([hidden]), .title-card, .title-steps", prev);
+      const outgoing = $$("[data-anim], .next:not([hidden]), .title-card", prev);
       tl.to(outgoing, { autoAlpha: 0, y: -26 * direction, duration: 0.26, stagger: 0.03, ease: "power2.in" });
       tl.add(() => {
         prev.classList.remove("active");
@@ -294,6 +296,7 @@
     if (incoming.length) tl.from(incoming, { autoAlpha: 0, y: 36 * direction, duration: 0.55, stagger: 0.08, ease: "power3.out" }, inAt);
     /* Focus once the panel is visible again (a hidden ancestor would refuse focus). */
     if (name !== "title") tl.call(() => $("h2", next)?.focus({ preventScroll: true }), null, inAt + 0.08);
+    if (name !== "title") tl.call(() => GameVoice.play(name), null, inAt + 0.35);
 
     if (name !== "title") announce(`${stepLabels[name]}, step ${missionSteps.indexOf(name) + 1} of ${missionSteps.length}`);
     if (prevName) sfx("next");
@@ -415,7 +418,7 @@
   }, 1000);
 
   /* ------------------------------------------------------------------
-     Hint — the icon appears only after 12 seconds without interaction
+     Hint — the bulb is always in the frame; it glows after 12 seconds without interaction
      ------------------------------------------------------------------ */
   let hintCall = null, hintBob = null, hintHide = null;
   function resetHint() {
@@ -446,10 +449,13 @@
     announce(text);
     sfx("ding");
     hintHide?.kill();
-    hintHide = gsap.delayedCall(8 * GameFX.MOTION, () => { hideHint(); resetHint(); });
+    const closeHint = delay => { hintHide?.kill(); hintHide = gsap.delayedCall(delay, () => { hideHint(); resetHint(); }); };
+    const voiced = GameVoice.play(`hint-${state.scene}`, () => closeHint(2 * GameFX.MOTION));
+    closeHint((voiced ? 16 : 8) * GameFX.MOTION);
   }
   function hideHint() {
     hintHide?.kill();
+    if (!hintBubble.hidden) GameVoice.stop();
     hintBubble.hidden = true;
     hideHintIcon();
   }
@@ -469,11 +475,13 @@
     pauseOverlay.hidden = mode !== "pause";
     if (mode === "none") {
       gsap.globalTimeline.resume();
+      GameVoice.resume();
       focusBeforeOverlay?.focus?.({ preventScroll: true });
       focusBeforeOverlay = null;
     } else {
       window.confetti?.reset?.();
       gsap.globalTimeline.pause();
+      GameVoice.pause();
       (mode === "help" ? $("#helpClose") : $("#resumeBtn")).focus({ preventScroll: true });
       announce(mode === "help" ? "How to play" : "Mission paused");
     }
@@ -1291,9 +1299,7 @@
     titleLoops = [];
     gsap.timeline({ delay: 0.15 })
       .fromTo(".title-card", { autoAlpha: 0, scale: 0.85, y: 40 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.8, ease: "back.out(1.5)" })
-      .add(ctaIntro($("#startBtn")), "-=0.25")
-      .fromTo(".title-steps", { autoAlpha: 0, y: 24 }, { autoAlpha: 1, y: 0 }, "-=0.3")
-      .fromTo(".title-steps li", { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 1, scale: 1, stagger: 0.1, ease: "back.out(2.4)" }, "<");
+      .add(ctaIntro($("#startBtn")), "-=0.25");
     if (!GameFX.reduced) titleLoops.push(gsap.to("#startBtn", { scale: 1.04, duration: 0.9, yoyo: true, repeat: -1, ease: "sine.inOut", delay: 2.4 }));
   }
   function titleLeave() { titleLoops.forEach(t => t.kill()); titleLoops = []; }
@@ -1361,7 +1367,7 @@
   /* ------------------------------------------------------------------
      Input
      ------------------------------------------------------------------ */
-  $("#startBtn").addEventListener("click", () => { GameSound.unlock(); go("NEXT"); });
+  $("#startBtn").addEventListener("click", () => { GameSound.unlock(); GameVoice.unlock(); go("NEXT"); });
   $$("[data-next]").forEach(button => button.addEventListener("click", () => go("NEXT")));
   backBtn.addEventListener("click", () => { sfx("tap"); go("BACK"); });
   $("#helpBtn").addEventListener("click", () => { sfx("tap"); closeSoundMenu(); actor.send({ type: "HELP" }); });
@@ -1393,27 +1399,16 @@
     if (!soundMenu.hidden && !event.target.closest("#soundMenu, #soundBtn")) closeSoundMenu();
   });
 
-  /* Narration reads the active step's heading and prompt aloud. */
+  /* Replay Narration restarts the active step's recorded line. */
   function narrate() {
-    const synth = window.speechSynthesis;
-    if (!synth || !state.sound) return;
-    const scene = sceneEl();
-    const heading = $("h2", scene);
-    const prompt = heading && heading.parentElement.querySelector("h2 ~ p");
-    const text = [heading, prompt].filter(Boolean).map(el => el.textContent.replace(/\s+/g, " ").trim()).join(" ");
-    if (!text) return;
-    synth.cancel();
-    const line = new SpeechSynthesisUtterance(text);
-    line.lang = document.documentElement.lang || "en-IN";
-    line.rate = 0.95;
-    synth.speak(line);
+    if (state.scene && state.scene !== "title") GameVoice.play(state.scene);
   }
   $("#narrationBtn").addEventListener("click", () => { closeSoundMenu({ refocus: true }); narrate(); });
 
   function setSound(on) {
     state.sound = on;
     GameSound.setEnabled(on);
-    if (!on) window.speechSynthesis?.cancel();
+    GameVoice.setEnabled(on);
     soundBtn.classList.toggle("is-muted", !on);
     soundBtn.setAttribute("aria-label", on ? "Sound options" : "Sound options, muted");
     muteBtn.setAttribute("aria-checked", String(!on));
@@ -1426,7 +1421,7 @@
     closeSoundMenu({ refocus: true });
   });
 
-  document.addEventListener("pointerdown", () => GameSound.unlock());
+  document.addEventListener("pointerdown", () => { GameSound.unlock(); GameVoice.unlock(); });
   game.addEventListener("pointerdown", onInteraction, true);
 
   document.addEventListener("keydown", event => {

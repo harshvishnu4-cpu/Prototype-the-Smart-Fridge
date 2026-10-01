@@ -110,18 +110,10 @@ h2 { margin: 10px 0 6px; font-size: 35px; line-height: 1.14; letter-spacing: -.4
 .scene[data-scene="title"] { padding: 0; }
 #game[data-current-scene="title"] .hero { display: none; }
 .title-thumbnail { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-.title-card { position: absolute; left: 60px; top: 718px; width: 630px; text-align: center; }
+.title-card { position: absolute; left: 0; right: 0; bottom: 44px; width: 630px; margin: 0 auto; text-align: center; }
 .eyebrow { display: inline-block; color: var(--purple); background: var(--lilac); border-radius: 999px; padding: 8px 20px; font-size: 16px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; }
 h1 { margin: 16px 0 6px; font-size: 94px; line-height: .86; letter-spacing: -4px; }
-h1 span { display: block; }
-h1 .t1 { color: var(--blue); }
-h1 .t2 { color: var(--teal); }
-h1 .t3 { color: var(--orange); font-size: .86em; }
-h1 .char { text-shadow: 0 5px 0 #fff, 0 10px 14px rgba(25, 16, 65, .18); }
 .title-sub { max-width: 520px; margin: 22px auto 28px; font-size: 23px; line-height: 1.35; font-weight: 700; color: var(--muted); }
-.title-steps { position: absolute; left: 90px; top: 832px; margin: 0; padding: 8px 12px; list-style: none; display: flex; gap: 12px; border-radius: 999px; background: rgba(255, 255, 255, .9); box-shadow: 0 8px 22px rgba(30, 18, 74, .18); }
-.title-steps li { display: flex; align-items: center; gap: 8px; padding: 8px 18px; border-radius: 999px; background: var(--lilac); color: var(--purple); font-weight: 900; font-size: 19px; }
-.title-steps .ic { font-size: 22px; }
 
 /* ---------- Goal ---------- */
 .goal-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
