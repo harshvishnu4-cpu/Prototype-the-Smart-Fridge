@@ -88,9 +88,17 @@
     return job;
   }
 
+  const LOCAL_FILE = location.protocol === "file:";       // fetch is blocked here: use the files directly
+
   async function transfer(path) {
     const img = nativeImage(path);
     if (img) return awaitNative(img, path);
+    if (LOCAL_FILE) {
+      if (FONT.test(path)) loadFont(path, null);
+      loaded.set(path, expected.get(path));
+      emit();
+      return;
+    }
     let buffer = null;
     const ctrl = new AbortController();
     let stall = setTimeout(() => ctrl.abort(), STALL_MS);
