@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#24145f">
+  <title>Smart Fridge Mission</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Icon sprite -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 1.8l2.6 7.6 7.6 2.6-7.6 2.6-2.6 7.6-2.6-7.6L1.8 12l7.6-2.6z"/></symbol>
+      <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.8a4.5 4.5 0 010 6.4M19.2 6.2a8.2 8.2 0 010 11.6"/></symbol>
+      <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9.5l5 5M22 9.5l-5 5"/></symbol>
+      <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.4a2.8 2.8 0 015.4 1c0 1.9-2.7 2.3-2.7 4.1"/><circle cx="12" cy="17.7" r=".4" fill="currentColor"/></symbol>
+      <symbol id="i-replay" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 102.6-6.1L3.5 8.5"/><path d="M3.5 3.5v5h5"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4.2l2.6 2.4M9.5 2.5h5"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M8 4.8c0-.8.9-1.3 1.6-.9l10 6.4c.6.4.6 1.3 0 1.7l-10 6.4c-.7.4-1.6-.1-1.6-.9z"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><rect fill="currentColor" stroke="none" x="6" y="4.5" width="4.2" height="15" rx="1.4"/><rect fill="currentColor" stroke="none" x="13.8" y="4.5" width="4.2" height="15" rx="1.4"/></symbol>
+      <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21.2h4"/><path d="M12 2.8a6.2 6.2 0 00-3.8 11.1c.8.6 1.2 1.4 1.2 2.3v.3h5.2v-.3c0-.9.4-1.7 1.2-2.3A6.2 6.2 0 0012 2.8z"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.8"/><path d="M20.5 20.5l-5.1-5.1"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.8"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+      <symbol id="i-stop" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.8"/><path d="M5.8 5.8l12.4 12.4"/></symbol>
+      <symbol id="i-family" viewBox="0 0 24 24"><circle cx="7.5" cy="6.5" r="2.8"/><circle cx="16.8" cy="8" r="2.3"/><path d="M2.5 20v-1.8a5 5 0 0110 0V20"/><path d="M14 13.4a4.2 4.2 0 017.5 2.6V20"/></symbol>
+      <symbol id="i-cart" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="17.5" cy="20" r="1.4"/><path d="M2 3.5h2.8l2.5 11.6a1.4 1.4 0 001.4 1.1h8.6a1.4 1.4 0 001.4-1l2-7.2H6"/></symbol>
+      <symbol id="i-fridge" viewBox="0 0 24 24"><rect x="5.5" y="2.5" width="13" height="19" rx="2.4"/><path d="M5.5 10h13M8.5 5.5v2M8.5 13v3"/></symbol>
+      <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5L12 3.2l8.5 4.3v9L12 20.8l-8.5-4.3z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v8.8"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+      <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.6"/><path d="M8.2 10.5V7.6a3.8 3.8 0 017.6 0v2.9"/></symbol>
+      <symbol id="i-truck" viewBox="0 0 24 24"><path d="M2.5 6h10.5v9.5H2.5zM13 9h4.3l3.2 3.4v3.1H13"/><circle cx="6.3" cy="17.4" r="1.8"/><circle cx="16.8" cy="17.4" r="1.8"/></symbol>
+      <symbol id="i-ticket" viewBox="0 0 24 24"><path d="M5 3h14v18l-2.3-1.4-2.4 1.4-2.3-1.4-2.3 1.4-2.4-1.4L5 21z"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4"/></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-6.8 10-6.8S22 12 22 12s-3.6 6.8-10 6.8S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+      <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v17M7 20h10M4 7h16"/><path d="M4 7l-2.5 6a2.8 2.8 0 005 0zM20 7l-2.5 6a2.8 2.8 0 005 0z"/></symbol>
+    </defs>
+  </svg>
+
+  <main id="game" data-current-scene="title" aria-label="Learning mission">
+    <!-- Environment layers (cross-faded by GSAP) -->
+    <div class="bg" id="bg" aria-hidden="true">
+      <div class="bg-layer" id="bgA"></div>
+      <div class="bg-layer" id="bgB"></div>
+    </div>
+    <div class="bg-shade" aria-hidden="true"></div>
+
+    <!-- Meera: pose wrapper > parallax wrapper > breathing image -->
+    <div class="hero" id="hero" aria-hidden="true">
+      <div class="hero-parallax" id="heroParallax">
+        <img id="meera" src="assets/storyboard/characters/meera-presenting.webp" alt="">
+      </div>
+    </div>
+
+    <!-- HUD -->
+    <header id="hud" class="hud" hidden>
+      <button class="hud-btn" id="backBtn" type="button" aria-label="Go back"><svg class="ic"><use href="#i-back"/></svg></button>
+      <button class="mission-mark" id="markBtn" type="button" aria-label="Pause the mission"><svg class="ic"><use href="#i-spark"/></svg></button>
+      <div class="hud-spacer"></div>
+      <button class="hud-btn wide" id="replayBtn" type="button" hidden><svg class="ic"><use href="#i-replay"/></svg><span>Replay</span></button>
+      <div class="timer" role="timer" aria-label="Mission time"><svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg><span id="timerText">00:00</span></div>
+      <button class="hud-btn" id="soundBtn" type="button" aria-pressed="true" aria-label="Sound on"><svg class="ic"><use id="soundIcon" href="#i-sound"/></svg></button>
+      <button class="hud-btn" id="helpBtn" type="button" aria-label="How to play"><svg class="ic"><use href="#i-help"/></svg></button>
+    </header>
+
+    <aside id="progressRail" class="rail" aria-label="Mission progress" hidden>
+      <div class="rail-track"><i class="rail-fill" id="railFill"></i></div>
+      <ol class="rail-dots" id="railDots"></ol>
+    </aside>
+
+    <button id="hintBtn" class="hint-btn" type="button" hidden aria-label="Show a hint"><svg class="ic"><use href="#i-bulb"/></svg></button>
+    <div class="hint-bubble" id="hintBubble" hidden><svg class="ic" aria-hidden="true"><use href="#i-bulb"/></svg><span id="hintText"></span></div>
+
+    <!-- 1 · TITLE -->
+    <section class="scene" data-scene="title" aria-labelledby="title-heading">
+      <div class="title-floaters" aria-hidden="true">
+        <img class="floater" src="assets/storyboard/props/milk-carton.webp" alt="" style="left:1330px;top:150px;width:120px">
+        <img class="floater" src="assets/storyboard/props/milk-carton.webp" alt="" style="left:1380px;top:560px;width:150px">
+        <img class="floater" src="assets/storyboard/props/milk-carton.webp" alt="" style="left:560px;top:640px;width:96px">
+        <img class="floater" src="assets/storyboard/props/milk-carton.webp" alt="" style="left:1255px;top:760px;width:84px">
+        <img class="floater" src="assets/storyboard/props/milk-carton.webp" alt="" style="left:540px;top:120px;width:80px">
+      </div>
+      <div class="title-card">
+        <div class="eyebrow">A smart systems adventure</div>
+        <h1 id="title-heading"><span class="t1">Smart</span> <span class="t2">Fridge</span> <span class="t3">Mission</span></h1>
+        <p class="title-sub">Help Meera teach her family’s fridge when to order milk, so it never runs out and nothing goes to waste.</p>
+        <button class="btn primary jumbo" id="startBtn" type="button">Start mission <svg class="ic"><use href="#i-arrow"/></svg></button>
+      </div>
+      <ul class="title-steps" aria-label="What you will do">
+        <li><svg class="ic"><use href="#i-eye"/></svg>Observe</li>
+        <li><svg class="ic"><use href="#i-scale"/></svg>Test</li>
+        <li><svg class="ic"><use href="#i-search"/></svg>Improve</li>
+      </ul>
+    </section>
+
+    <!-- 2 · GOAL -->
+    <section class="scene" data-scene="goal" aria-labelledby="goal-heading">
+      <div class="panel bubble" data-anim>
+        <span class="tag">Meera</span>
+        <h2 id="goal-heading" tabindex="-1">Hi, I’m Meera! Our fridge can order milk all by itself.</h2>
+        <p>But it needs a rule. Tap both cards to find the two jobs a good rule must do.</p>
+      </div>
+      <div class="goal-cards" data-anim>
+        <button class="goal-card" type="button" data-goal="ready" data-key-choice aria-label="Reveal goal 1"
+                data-label="Goal 1: Never run out. Milk is ready every morning.">
+          <span class="gc-inner">
+            <span class="gc-face gc-front"><b>1</b><small>Tap to reveal</small></span>
+            <span class="gc-face gc-back">
+              <img src="assets/storyboard/props/milk-carton.webp" alt="">
+              <span><b>Never run out</b><small>Milk is ready every morning.</small></span>
+            </span>
+          </span>
+        </button>
+        <button class="goal-card" type="button" data-goal="waste" data-key-choice aria-label="Reveal goal 2"
+                data-label="Goal 2: Never waste. No extra milk goes bad.">
+          <span class="gc-inner">
+            <span class="gc-face gc-front"><b>2</b><small>Tap to reveal</small></span>
+            <span class="gc-face gc-back">
+              <img src="assets/storyboard/props/spoiled-milk.webp" alt="">
+              <span><b>Never waste</b><small>No extra milk goes bad.</small></span>
+            </span>
+          </span>
+        </button>
+      </div>
+      <div class="balance-wrap" id="goalBalance" hidden>
+        <div class="balance" aria-hidden="true">
+          <div class="beam" id="beam">
+            <span class="pan pan-left"><img src="assets/storyboard/props/milk-carton.webp" alt=""></span>
+            <span class="pan pan-right"><img src="assets/storyboard/props/spoiled-milk.webp" alt=""></span>
+          </div>
+          <div class="fulcrum"></div>
+        </div>
+        <p class="balance-caption">A smart rule keeps <b>both</b> goals in balance.</p>
+      </div>
+      <button class="btn primary next" type="button" data-next hidden>Set the rule <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </section>
+
+    <!-- 3 · PREDICT -->
+    <section class="scene" data-scene="predict" aria-labelledby="predict-heading">
+      <div class="panel bubble" data-anim>
+        <span class="tag">Predict</span>
+        <h2 id="predict-heading" tabindex="-1">The fridge orders milk when this many cartons are left. What number would you choose?</h2>
+        <p>It’s a guess for now. You’ll test it with real evidence soon.</p>
+      </div>
+      <ul class="facts" data-anim aria-label="Fridge facts">
+        <li><img src="assets/storyboard/props/milk-carton.webp" alt=""><span>The family drinks <b>1 carton</b> a day</span></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-truck"/></svg><span>Delivery takes <b>2 days</b></span></li>
+        <li><svg class="ic" aria-hidden="true"><use href="#i-box"/></svg><span>Each delivery brings <b>4 cartons</b></span></li>
+      </ul>
+      <div class="number-cards" data-question="predict" role="group" aria-label="Choose a low-stock number" data-anim>
+        <button class="number-card" type="button" data-value="1" data-key-choice aria-pressed="false">
+          <span class="nc-cartons"><img src="assets/storyboard/props/milk-carton.webp" alt=""></span>
+          <b>1</b><small>Order late</small>
+          <span class="nc-lock" aria-hidden="true"><svg class="ic"><use href="#i-lock"/></svg></span>
+        </button>
+        <button class="number-card" type="button" data-value="2" data-key-choice aria-pressed="false">
+          <span class="nc-cartons"><img src="assets/storyboard/props/milk-carton.webp" alt=""><img src="assets/storyboard/props/milk-carton.webp" alt=""></span>
+          <b>2</b><small>Order midway</small>
+          <span class="nc-lock" aria-hidden="true"><svg class="ic"><use href="#i-lock"/></svg></span>
+        </button>
+        <button class="number-card" type="button" data-value="3" data-key-choice aria-pressed="false">
+          <span class="nc-cartons"><img src="assets/storyboard/props/milk-carton.webp" alt=""><img src="assets/storyboard/props/milk-carton.webp" alt=""><img src="assets/storyboard/props/milk-carton.webp" alt=""></span>
+          <b>3</b><small>Order early</small>
+          <span class="nc-lock" aria-hidden="true"><svg class="ic"><use href="#i-lock"/></svg></span>
+        </button>
+      </div>
+      <p class="choice-summary" id="predictSummary" aria-live="polite" data-anim>Pick a number, then lock it in.</p>
+      <button class="btn primary next" type="button" id="lockBtn" hidden><svg class="ic"><use href="#i-lock"/></svg> Lock my prediction</button>
+      <button class="btn primary next" type="button" data-next hidden>Watch the week <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </section>
+
+    <!-- 4 · OBSERVE -->
+    <section class="scene wide" data-scene="observe" aria-labelledby="observe-heading">
+      <div class="observe-layout">
+        <div class="panel observe-side" data-anim>
+          <span class="tag">Observe</span>
+          <h2 id="observe-heading" tabindex="-1">Watch one week of fridge footage.</h2>
+          <p>Keep an eye on the milk, the order ticket, and who comes home.</p>
+          <div class="caption" id="caption" aria-hidden="true">Press play to start the footage.</div>
+          <ul class="legend">
+            <li><span class="lg-chip rule">≤ 2</span>The rule: order at 2 cartons</li>
+            <li><span class="lg-chip extra">4 +</span>More than 4 is extra milk</li>
+          </ul>
+        </div>
+        <div class="panel player" data-anim role="region" aria-label="Seven-day fridge footage">
+          <ol class="day-chips" id="dayChips"></ol>
+          <div class="fridge-cam" id="fridgeCam">
+            <div class="cam-light"></div>
+            <div class="cam-rec" aria-hidden="true"><i></i>REC</div>
+            <div class="fridge-display" id="fridgeDisplay">Rule: order at 2</div>
+            <div class="zone zone-fresh"><span>Fresh zone · 4</span></div>
+            <div class="zone zone-extra" id="zoneExtra"><span>Extra</span></div>
+            <div class="scan-beam" id="scanBeam"></div>
+            <div class="shelf-line"></div>
+            <div class="slots" id="slots"></div>
+            <div class="lower-shelf" aria-hidden="true"><span>🥦</span><span>🍅</span><span>🧀</span><span>🥚</span><span>🍋</span></div>
+            <div class="order-ticket" id="orderTicket">
+              <svg class="ic"><use href="#i-ticket"/></svg>
+              <span><b id="ticketText">ORDER QUEUED</b><small id="ticketSub">4 cartons · arrives Fri</small></span>
+            </div>
+            <img class="cam-papa" id="camPapa" src="assets/storyboard/characters/papa-with-milk.webp" alt="">
+            <div class="delivery" id="delivery">
+              <svg class="chute" viewBox="0 0 120 70" aria-hidden="true"><path d="M6 40 Q60 -24 114 40 Q96 30 78 40 Q60 30 42 40 Q24 30 6 40Z"/><path class="cords" d="M8 40 L52 88 M42 40 L56 88 M78 40 L64 88 M112 40 L68 88"/></svg>
+              <div class="crate"><svg class="ic"><use href="#i-truck"/></svg><b>+4</b></div>
+            </div>
+            <div class="float-label" id="floatLabel">−1</div>
+            <div class="cam-alert" id="camAlert">Too much milk!</div>
+            <div class="cam-result" id="camResult">
+              <img src="assets/storyboard/props/spoiled-milk.webp" alt="">
+              <div><b id="camResultTitle">2 extra cartons</b><span>bought this week. Some milk could go to waste.</span></div>
+            </div>
+          </div>
+          <div class="player-bar">
+            <button class="play-btn" id="playBtn" type="button" aria-label="Play the footage"><svg class="ic"><use id="playIcon" href="#i-play"/></svg></button>
+            <div class="scrub" id="scrub">
+              <div class="scrub-fill" id="scrubFill"></div>
+              <div class="scrub-knob" id="scrubKnob" role="slider" tabindex="0" aria-label="Footage day" aria-valuemin="1" aria-valuemax="7" aria-valuenow="1" aria-valuetext="Monday"></div>
+            </div>
+            <span class="scrub-day" id="scrubDay">Mon</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary next" type="button" data-next hidden>Test the rule <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </section>
+
+    <!-- 5 · CALIBRATE -->
+    <section class="scene" data-scene="calibrate" aria-labelledby="calibrate-heading">
+      <div class="panel bubble compact" data-anim>
+        <span class="tag">Calibrate</span>
+        <h2 id="calibrate-heading" tabindex="-1">Test the rule on a normal week.</h2>
+        <p>No surprise shopping this time. Find the number that avoids run-out <em>and</em> waste.
+          <span class="pred-chip">Your prediction: <b id="savedPrediction">—</b></span></p>
+      </div>
+      <div class="panel calibrate-board" data-anim>
+        <div class="cal-controls">
+          <p class="dial-label">Order when <b id="dialValue">2</b> or fewer cartons are left</p>
+          <div class="dial">
+            <button class="dial-step" id="dialMinus" type="button" aria-label="Lower the number"><svg class="ic"><use href="#i-minus"/></svg></button>
+            <div class="dial-track" id="dialTrack">
+              <div class="dial-rail"></div>
+              <div class="dial-stops" id="dialStops" aria-hidden="true"><span data-stop="0">0</span><span data-stop="1">1</span><span data-stop="2">2</span><span data-stop="3">3</span><span data-stop="4">4</span></div>
+              <div class="dial-knob" id="dialKnob" role="slider" tabindex="0" aria-label="Low-stock number" aria-valuemin="0" aria-valuemax="4" aria-valuenow="2"><span id="dialKnobText">2</span></div>
+            </div>
+            <button class="dial-step" id="dialPlus" type="button" aria-label="Raise the number"><svg class="ic"><use href="#i-plus"/></svg></button>
+          </div>
+          <button class="btn secondary" id="testBtn" type="button"><svg class="ic"><use href="#i-play"/></svg> Test this number</button>
+          <div class="meter" aria-hidden="true">
+            <div class="meter-bar"><span>Run-out</span><span>Balanced</span><span>Waste</span><i class="needle" id="needle"></i></div>
+          </div>
+        </div>
+        <div class="week-chart" id="calChart" aria-hidden="true"></div>
+        <div class="result-card" id="calResult" aria-live="polite">
+          <span class="result-icon"><svg class="ic"><use href="#i-scale"/></svg></span>
+          <div><b>Waiting for your test</b><p>Set a number and press Test. The week will show if it is too low, balanced, or too high.</p></div>
+        </div>
+      </div>
+      <button class="btn primary next" type="button" data-next hidden>Investigate the extra milk <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </section>
+
+    <!-- 6 · INVESTIGATE -->
+    <section class="scene" data-scene="investigate" aria-labelledby="investigate-heading">
+      <div class="panel bubble" data-anim>
+        <span class="tag">Investigate</span>
+        <h2 id="investigate-heading" tabindex="-1">The fridge ordered at 2 cartons, yet Friday had 6! What happened?</h2>
+        <p>Use the clues from the footage.</p>
+      </div>
+      <ol class="clues" id="clues" data-anim aria-label="Clues from the footage"></ol>
+      <div class="choices grid3" data-question="cause" role="group" aria-label="Choose what happened" data-anim>
+        <button class="choice" type="button" data-value="papa" data-key-choice>
+          <span class="choice-media"><img src="assets/storyboard/characters/papa-with-milk.webp" alt=""></span>
+          <span class="choice-text"><b>Papa bought milk after the order was queued.</b></span>
+        </button>
+        <button class="choice" type="button" data-value="sibling" data-key-choice>
+          <span class="choice-media"><img src="assets/storyboard/characters/sibling-with-milk.webp" alt=""></span>
+          <span class="choice-text"><b>My brother drank some of the milk.</b></span>
+        </button>
+        <button class="choice" type="button" data-value="spoiled" data-key-choice>
+          <span class="choice-media"><img src="assets/storyboard/props/spoiled-milk.webp" alt=""></span>
+          <span class="choice-text"><b>Some of the milk spoiled early.</b></span>
+        </button>
+      </div>
+      <p class="feedback" data-feedback aria-live="polite">Choose the explanation that matches the footage.</p>
+      <button class="btn primary next" type="button" data-next hidden>Repair the rule <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </section>
+
+    <!-- 7 · REPAIR -->
+    <section class="scene" data-scene="repair" aria-labelledby="repair-heading">
+      <div class="panel bubble" data-anim>
+        <span class="tag">Repair</span>
+        <h2 id="repair-heading" tabindex="-1">How can the fridge avoid orders it doesn’t need?</h2>
+        <p>It checked on Wednesday morning. Papa added milk that evening.</p>
+      </div>
+      <div class="choices grid3 icon-choices" data-question="fix" role="group" aria-label="Choose a fix" data-anim>
+        <button class="choice" type="button" data-value="recheck" data-key-choice>
+          <span class="choice-media badge"><svg class="ic"><use href="#i-search"/></svg></span>
+          <span class="choice-text"><b>Check the fridge again just before sending the order.</b></span>
+        </button>
+        <button class="choice" type="button" data-value="wait" data-key-choice>
+          <span class="choice-media badge"><svg class="ic"><use href="#i-calendar"/></svg></span>
+          <span class="choice-text"><b>Always wait a fixed number of days.</b></span>
+        </button>
+        <button class="choice" type="button" data-value="stop" data-key-choice>
+          <span class="choice-media badge"><svg class="ic"><use href="#i-stop"/></svg></span>
+          <span class="choice-text"><b>Stop ordering milk.</b></span>
+        </button>
+      </div>
+      <p class="feedback" data-feedback aria-live="polite">Choose the change that uses fresh information.</p>
+      <div class="panel fix-lab" id="fixLab" hidden>
+        <div class="fix-head">
+          <b>Test the improved rule on the same week</b>
+          <button class="btn secondary small" id="runFixBtn" type="button"><svg class="ic"><use href="#i-play"/></svg> <span>Run the fix</span></button>
+        </div>
+        <div class="fix-track">
+          <svg class="fix-svg" viewBox="0 0 872 150" aria-hidden="true">
+            <path class="fix-path-bg" d="M98 75 C180 20 240 130 324 75 S470 20 550 75 S700 130 776 75"/>
+            <path class="fix-path" id="fixPath" d="M98 75 C180 20 240 130 324 75 S470 20 550 75 S700 130 776 75"/>
+            <circle class="fix-token" id="fixToken" r="11" cx="0" cy="0"/>
+          </svg>
+          <div class="fix-node" data-node="1" style="left:0">
+            <span class="fn-when">Wed morning</span><b>First check</b><small>2 left → order queued</small>
+          </div>
+          <div class="fix-node" data-node="2" style="left:226px">
+            <img src="assets/storyboard/characters/papa-with-milk.webp" alt="">
+            <span class="fn-when">Wed evening</span><b>Papa adds 2</b><small>Now 3 cartons</small>
+          </div>
+          <div class="fix-node" data-node="3" style="left:452px">
+            <span class="fn-when">Thu morning</span><b>Fresh re-check</b><small id="recheckText">3 left → cancel</small>
+            <span class="stamp" id="fixStamp">Cancelled</span>
+          </div>
+          <div class="fix-node result" data-node="4" style="left:678px">
+            <span class="fn-when">Week result</span>
+            <div class="week-chart mini" id="fixChart" aria-hidden="true"></div>
+            <small id="fixResultText">Waiting…</small>
+          </div>
+        </div>
+        <p class="sr-only" id="fixLive" aria-live="polite"></p>
+      </div>
+      <button class="btn primary next" type="button" data-next hidden>Explain the bigger idea <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </section>
+
+    <!-- 8 · EXPLAIN -->
+    <section class="scene" data-scene="explain" aria-labelledby="explain-heading">
+      <div class="panel bubble" data-anim>
+        <span class="tag">Explain</span>
+        <h2 id="explain-heading" tabindex="-1">Why can’t every home use the same fixed number?</h2>
+        <p>Think about people, habits and shopping.</p>
+      </div>
+      <div class="choices grid3 icon-choices" data-question="scale" role="group" aria-label="Choose why one number does not work everywhere" data-anim>
+        <button class="choice" type="button" data-value="many" data-key-choice>
+          <span class="choice-media badge"><svg class="ic"><use href="#i-family"/></svg></span>
+          <span class="choice-text"><b>Homes use milk differently.</b><small>Different people, amounts and shopping times</small></span>
+        </button>
+        <button class="choice" type="button" data-value="same" data-key-choice>
+          <span class="choice-media badge"><svg class="ic"><use href="#i-cart"/></svg></span>
+          <span class="choice-text"><b>Everyone shops together.</b><small>One timetable works for every family</small></span>
+        </button>
+        <button class="choice" type="button" data-value="size" data-key-choice>
+          <span class="choice-media badge"><svg class="ic"><use href="#i-fridge"/></svg></span>
+          <span class="choice-text"><b>All fridges are the same size.</b><small>So one number fits every home</small></span>
+        </button>
+      </div>
+      <p class="feedback" data-feedback aria-live="polite">Choose the reason that fits real households.</p>
+      <div class="panel households" id="households" hidden>
+        <p class="hh-title">Same rule, <b>order at 2</b>, in three homes:</p>
+        <div class="hh-grid" id="hhGrid"></div>
+      </div>
+      <button class="btn primary next" type="button" data-next hidden>Try it somewhere new <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </section>
+
+    <!-- 9 · TRANSFER -->
+    <section class="scene" data-scene="transfer" aria-labelledby="transfer-heading">
+      <div class="panel transfer-panel" data-anim>
+        <span class="tag">Transfer</span>
+        <h2 id="transfer-heading" tabindex="-1">The class cupboard orders glue sticks when 5 are left.</h2>
+        <p>Some students also bring glue sticks from home. Which rule should the cupboard use?</p>
+        <div class="choices stack" data-question="transfer" role="group" aria-label="Choose a cupboard rule">
+          <button class="choice" type="button" data-value="recheck" data-key-choice>
+            <span class="choice-media badge"><svg class="ic"><use href="#i-search"/></svg></span>
+            <span class="choice-text"><b>Re-check the cupboard just before ordering.</b></span>
+          </button>
+          <button class="choice" type="button" data-value="weekly" data-key-choice>
+            <span class="choice-media badge"><svg class="ic"><use href="#i-calendar"/></svg></span>
+            <span class="choice-text"><b>Order every week without checking.</b></span>
+          </button>
+          <button class="choice" type="button" data-value="extra" data-key-choice>
+            <span class="choice-media badge"><svg class="ic"><use href="#i-box"/></svg></span>
+            <span class="choice-text"><b>Always buy extra boxes, just in case.</b></span>
+          </button>
+        </div>
+        <p class="feedback" data-feedback aria-live="polite">Use the idea that fixed the fridge.</p>
+      </div>
+      <div class="impact" id="impact" hidden>
+        <figure class="good">
+          <img src="assets/storyboard/outcomes/cupboard-balanced.webp" alt="Cupboard with five glue sticks neatly on the shelf">
+          <figcaption><svg class="ic"><use href="#i-check"/></svg>With a fresh re-check</figcaption>
+        </figure>
+        <figure class="bad">
+          <img src="assets/storyboard/outcomes/cupboard-overstock.webp" alt="Cupboard overflowing with glue sticks">
+          <figcaption><svg class="ic"><use href="#i-x"/></svg>Without a re-check</figcaption>
+        </figure>
+      </div>
+      <button class="btn primary next" type="button" data-next hidden>See what you learned <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </section>
+
+    <!-- 10 · COMPLETE -->
+    <section class="scene" data-scene="complete" aria-labelledby="complete-heading">
+      <div class="panel complete-card" data-anim>
+        <img class="medal" id="medal" src="assets/storyboard/props/mission-medal.webp" alt="">
+        <div class="eyebrow">Mission complete</div>
+        <h2 id="complete-heading" tabindex="-1">You made the rule smarter!</h2>
+        <p class="complete-sub">Good systems don’t just follow a number. They look at fresh evidence before they act.</p>
+        <ol class="learned">
+          <li><svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11"/><path d="M6.5 12.5l3.8 3.8 7.2-7.6"/></svg><b>Watched</b><small>You spotted Papa’s extra milk in the footage.</small></li>
+          <li><svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11"/><path d="M6.5 12.5l3.8 3.8 7.2-7.6"/></svg><b>Tested</b><small>You found that 2 cartons balances a normal week.</small></li>
+          <li><svg class="tick" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11"/><path d="M6.5 12.5l3.8 3.8 7.2-7.6"/></svg><b>Fixed</b><small>You added a fresh re-check before ordering.</small></li>
+        </ol>
+        <div class="stats">
+          <span>Your guess <b id="statPrediction">–</b></span>
+          <span>Tests run <b id="statTests">–</b></span>
+          <span>Time <b id="statTime">–</b></span>
+        </div>
+        <button class="btn primary jumbo" id="finishBtn" type="button">Finish</button>
+      </div>
+    </section>
+
+    <!-- Overlays -->
+    <div class="overlay" id="helpOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="overlay-card">
+        <button class="close-btn" type="button" id="helpClose" aria-label="Close help"><svg class="ic"><use href="#i-x"/></svg></button>
+        <h2 id="helpTitle">How to play</h2>
+        <p>Make a choice, watch what happens, and use the evidence to improve the fridge’s rule.</p>
+        <ul>
+          <li><kbd>Tab</kbd> moves between buttons. <kbd>Enter</kbd> or <kbd>Space</kbd> presses one.</li>
+          <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> choose an answer card.</li>
+          <li><kbd>Esc</kbd> pauses the mission.</li>
+          <li>Stuck? A <svg class="ic inline"><use href="#i-bulb"/></svg> hint appears if you wait a little.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="overlay" id="pauseOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <div class="overlay-card pause-card">
+        <div class="mission-mark large" aria-hidden="true"><svg class="ic"><use href="#i-spark"/></svg></div>
+        <h2 id="pauseTitle">Mission paused</h2>
+        <p>Your progress is safe.</p>
+        <button class="btn primary" type="button" id="resumeBtn">Keep going</button>
+      </div>
+    </div>
+
+    <div class="fx-layer" id="fxLayer" aria-hidden="true"></div>
+    <div class="sr-only" id="liveRegion" aria-live="polite"></div>
+  </main>
+
+  <!-- Libraries (all local, offline) -->
+  <script src="vendor/gsap/gsap.min.js"></script>
+  <script src="vendor/gsap/Flip.min.js"></script>
+  <script src="vendor/gsap/Draggable.min.js"></script>
+  <script src="vendor/gsap/MotionPathPlugin.min.js"></script>
+  <script src="vendor/gsap/DrawSVGPlugin.min.js"></script>
+  <script src="vendor/gsap/SplitText.min.js"></script>
+  <script src="vendor/gsap/TextPlugin.min.js"></script>
+  <script src="vendor/gsap/ScrambleTextPlugin.min.js"></script>
+  <script src="vendor/gsap/CustomEase.min.js"></script>
+  <script src="vendor/gsap/CustomWiggle.min.js"></script>
+  <script src="vendor/gsap/Physics2DPlugin.min.js"></script>
+  <script src="vendor/xstate/xstate.umd.min.js"></script>
+  <script src="vendor/tone/Tone.js"></script>
+  <script src="vendor/confetti/confetti.browser.js"></script>
+
+  <!-- Game -->
+  <script src="js/simulation.js"></script>
+  <script src="js/sound.js"></script>
+  <script src="js/effects.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
